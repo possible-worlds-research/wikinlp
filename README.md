@@ -6,7 +6,7 @@ This module lets you download and preprocess Wikipedia in some language of your 
 Here is an example usage, which loads and processes the Occitan Wikipedia:
 
 ```
-from wikitrain.wikiloader import WikiLoader
+from wikiloader.wikiloader import WikiLoader
 
 wikiloader = WikiLoader('oc')
 wikiloader.mk_wiki_data()
