@@ -1,0 +1,7 @@
+en Category
+fr Catégorie
+de Kategorie
+pt Categoria
+it Categoria
+vi Thể loại
+oc Categoria
