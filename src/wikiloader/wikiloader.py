@@ -4,7 +4,6 @@ import re
 import bz2
 import pickle
 import requests
-#import subprocess
 from pathlib import Path
 from wikiextractor.WikiExtractor import process_wiki
 
@@ -16,27 +15,35 @@ class WikiLoader:
         filename = inspect.getframeinfo(inspect.currentframe()).filename
         self.path = os.path.dirname(os.path.abspath(filename))
 
-    def mk_wiki_data(self):
+    def mk_wiki_data(self, n_dump_files = None):
         processed_dir = join(os.getcwd(),join('data',self.lang))
         Path(processed_dir).mkdir(exist_ok=True, parents=True)
 
         link_file = self.get_wiki_links()
         wiki_paths = self.read_wiki_links()
+        linear_filenames = []
 
-        for wiki_path in wiki_paths:
-            print("\n---> WikiLoader: downloading ", wiki_path)
+        if not n_dump_files:
+            n = len(wiki_paths)
+        else:
+            n = min(n_dump_files, len(wiki_paths))
+
+        for i in range(n):
+            wiki_path = wiki_paths[i]
+            print("\n---> WikiLoader: downloading ", wiki_path, "(dump file",i+1,")")
             bz2_file = join(processed_dir,wiki_path.split('/')[-1])
             if exists(bz2_file):
                 print("     File already exists. Skipping download.")
             else:
-                #subprocess.run(["wget",wiki_path, "-P",processed_dir])
                 with open (join(processed_dir,bz2_file), "wb") as f:
                     f.write(requests.get(wiki_path).content)
 
             self.extract_xml(bz2_file)
             self.get_categories(bz2_file)
             cat_file = bz2_file.replace('bz2','cats.pkl')
-            self.mk_linear(bz2_file,cat_file)
+            lf = self.mk_linear(bz2_file,cat_file)
+            linear_filenames.append(lf)
+        return linear_filenames
 
     def bz2_uncompress(self, filepath):
         print("     Uncompressing downloaded bz2:",filepath,"---")
@@ -61,8 +68,16 @@ class WikiLoader:
         Path("./wiki_dump_links").mkdir(exist_ok=True, parents=True)
         filename = "./wiki_dump_links/"+self.lang+"_wiki_dump_links.txt"
         outf = open(filename,'w')
-        for url in match:
-            outf.write("https://dumps.wikimedia.org/"+self.lang+"wiki/latest/"+url+"\n")
+
+        if len(match) > 1:
+            for i in range(1, len(match)): #Ordering list
+                r = re.compile(".*articles"+str(i)+"\.xml.*")
+                urls = list(filter(r.match,match))
+                for url in urls:
+                    outf.write("https://dumps.wikimedia.org/"+self.lang+"wiki/latest/"+url+"\n")
+        else:
+            outf.write("https://dumps.wikimedia.org/"+self.lang+"wiki/latest/"+match[0]+"\n")
+            
         outf.close()
         print("     Finished!")
         return filename
@@ -129,7 +144,7 @@ class WikiLoader:
 
         xml_file = bz2_file.replace('bz2','xml')
         tmp_linear_file = bz2_file.replace('bz2','raw.tmp')
-        process_wiki(xml_file,tmp_linear_file)
+        process_wiki(dumpfile=xml_file,outfile=tmp_linear_file)
 
         all_categories = pickle.load(open(cat_file,'rb'))
         tmpf = open(tmp_linear_file,'r')
@@ -148,6 +163,6 @@ class WikiLoader:
         tmpf.close()
         os.remove(tmp_linear_file)
         os.remove(xml_file)
-
+        return linear_filename
 
 

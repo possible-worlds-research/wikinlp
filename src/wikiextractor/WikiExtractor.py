@@ -519,6 +519,7 @@ def process_wiki(dumpfile=None, outfile=None, htmlsafe=False, templates=False):
     global urlbase, acceptedNamespaces
     global expand_templates, templateCache
 
+    sys.argv = [sys.argv[0]]
     sys.argv.extend(['-o', outfile])
     sys.argv.extend(['--html-safe', 'False'])
     sys.argv.extend(['--no-templates'])
