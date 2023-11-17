@@ -35,7 +35,7 @@ from trainspm.trainspm import TrainSPM
 lang = 'en'
 
 print("Running TrainSPM")
-trainspm = TrainSPM(lang)
+trainspm = TrainSPM(lang,8000)
 trainspm.train_sentencepiece()
 ```
 

@@ -6,12 +6,14 @@ from glob import glob
 import shutil
 from pathlib import Path
 from os.path import join, exists
+from datetime import datetime
 import sentencepiece as spm
 
 class TrainSPM:
 
-    def __init__(self,lang=None):
+    def __init__(self,lang=None, vocab_size=None):
         self.lang = lang
+        self.vocab_size = vocab_size
         filename = inspect.getframeinfo(inspect.currentframe()).filename
         self.path = os.path.dirname(os.path.abspath(filename))
         self.model_path = ""
@@ -56,10 +58,12 @@ class TrainSPM:
         else:
             self.train_path = data_path
         print("\n--- TrainSPM: Training sentencepiece on corpus ---")
-        txt_path_filename = self.train_path.split('/')[-1]
-        spm.SentencePieceTrainer.train(input=self.train_path, model_prefix=join('spm',self.lang,txt_path_filename.replace('.txt','')), vocab_size=10000, minloglevel=2, normalization_rule_name='nmt_nfkc_cf')
-        self.model_path = join('spm',self.lang,self.train_path.replace('.txt','.model'))
-        print("\nAll done!! Your sentence piece model is at",self.model_path,".")
+        date = datetime.today().strftime('%Y-%m-%d')
+        if str(self.vocab_size)[-3:] == '000':
+            vocab_size_str = str(self.vocab_size)[:-3]+'k'
+        txt_path_filename = self.lang+'wiki.'+vocab_size_str+'.'+date
+        spm.SentencePieceTrainer.train(input=self.train_path, model_prefix=join('spm',self.lang,txt_path_filename), vocab_size=self.vocab_size, minloglevel=2, normalization_rule_name='nmt_nfkc_cf')
+        print("\nAll done!! Your sentence piece model is at spm/"+self.lang+"/"+txt_path_filename+"...")
 
     def apply_sentencepiece(self):
         data_dir = join(os.getcwd(),join('data',self.lang))
