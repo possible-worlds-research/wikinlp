@@ -53,25 +53,33 @@ trainspm.train_sentencepiece(data_path='data/en/enwiki-latest-pages-articles1.xm
 
 ## Training a word vector model for the SentencePiece vocabulary
 
-Once you have a preprocessed Wiki dump and a SentencePiece model trained on that dump, you can compute a word vector space for each word piece in your model and perform similarity computations over that space. The WikiLoader module uses [FastText](https://github.com/facebookresearch/fastText) by default for the vector space construction. Here is some example code.
+Once you have a preprocessed Wiki dump and a SentencePiece model trained on that dump, you can compute a word vector space for each word piece in your model and perform similarity computations over that space. The WikiLoader module uses [FastText](https://github.com/facebookresearch/fastText) by default for the vector space construction. Here is some example code, which first loads a previously trained SentencePiece model, applies it to the wiki data that was originally downloaded, and uses the tokenized corpus to train a vector space.
 
 ```
 from trainds.trainds import TrainDS
+from trainspm.trainspm import TrainSPM
 
 lang = 'en'
+
+print("Generating SPM corpus")
+trainspm = TrainSPM(lang,8000)
+trainspm.model_path='./spm/en/enwiki.8k.2023-11-17.model'
+trainspm.apply_sentencepiece()
 
 print("Running FastText")
 trainds = TrainDS(lang)
 trainds.train_fasttext(corpus_size=100000000)
-nns = trainds.compute_nns(top_words=10000)
+nns = trainds.compute_nns(top_words=100)
 for word,ns in nns.items():
     print(word,':',' '.join(ns))
 ```
 
-In case you have previously trained the vector space and simply want to retrieve the nearest neighbours, you can load the train model this way:
+In case you have previously trained the vector space and simply want to retrieve the nearest neighbours, you can load the trained model this way:
 
 ```
 trainds = TrainDS(lang)
-trainds.model_path = "./ds/en/enwiki-latest-pages-articles2.xml-p41243p151573.full.ft"
+trainds.model_path = "./ds/en/enwiki-latest-pages-articles.xml.full.ft"
 nns = trainds.compute_nns(top_words=10000)
+for word,ns in nns.items():
+    print(word,':',' '.join(ns))
 ```
