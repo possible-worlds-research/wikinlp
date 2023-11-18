@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wikiloader"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
     "requests==2.22.0",
     "sentencepiece==0.1.97",
