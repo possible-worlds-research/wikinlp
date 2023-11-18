@@ -109,7 +109,7 @@ Your SentencePiece model and vocabulary are then stored in the *spm* directory o
 ```
 import sentencepiece as spm
 
-model_path = 'enwiki.8k.2023-11-17.model' #the path of your pretrained model
+model_path = './spm/en/enwiki.8k.2023-11-17.model' #the path of your pretrained model
 doc = "This is a test sentence."
 
 sp = spm.SentencePieceProcessor()
