@@ -1,6 +1,6 @@
 # WikiLoader
 
-This module lets you download and preprocess Wikipedia in some language of your choice. Additionally, it offers options for training basic NLP tools on your Wikipedia snapshot. At the moment, the following are offered:
+This package lets you download and preprocess Wikipedia in some language of your choice. You don't have to worry about finding the latest snapshot, downloading it, figuring out how to extract plain text. All is done automatically. Additionally, the package offers options for training basic NLP tools on your Wikipedia snapshot. At the moment, the following are offered:
 
 * converting (part of) a Wikipedia snapshot into a plain text corpus;
 * making a plain text corpus out of specific Wikipedia categories;
@@ -8,6 +8,31 @@ This module lets you download and preprocess Wikipedia in some language of your 
 * training a distributional semantic space over the SentencePiece vocabulary.
 
 Please check the language code for your Wikipedia: it is the prefix to your Wikipedia url. For instance, The English Wikipedia is at *https://en.wikipedia.org/* so its language code is *en*. The Hindi Wikipedia is at *https://hi.wikipedia.org/*, so its language code is *hi*.
+
+**Warning:** For people who are new to Wikipedia processing... anything you do on English, and generally on large snaphots, will take time. So make yourself a cup of tea before you start.
+
+**Credits:** This package includes a modified version of the excellent [wikiextractor](https://github.com/attardi/wikiextractor) code. It also builds on various existing NLP tools, most notably [SentencePiece](https://github.com/google/sentencepiece) and [FastText](https://github.com/facebookresearch/fastText).
+
+
+## Installation
+
+We recommend installing this package in a virtual environment. If you do not have virtualenv installed, you can get it in the following way: 
+
+```
+sudo apt update
+sudo apt install python3-setuptools
+sudo apt install python3-pip
+sudo apt install python3-virtualenv
+```
+
+Then, create a directory for wikiloader, make your virtual environment and install the package:
+
+```
+mkdir wikiloader
+cd wikiloader
+virtualenv env && source env/bin/activate
+pip install git+https://github.com/possible-worlds-xyz/wikiloader.git
+```
 
 
 ## Loading a Wikipedia snapshot
