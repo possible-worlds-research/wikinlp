@@ -81,7 +81,7 @@ You should now find two new directories in your *data/en/categories/* folder, na
 
 ## Training a wordpiece tokenizer
 
-You can train a wordpiece tokenizer on the Wiki data you have downloaded, using the [SentencePiece package](https://github.com/google/sentencepiece). WikiLoader will automatically make a 5M corpus out of your data and train on it.
+You can train a wordpiece tokenizer on the Wiki data you have downloaded, using the [SentencePiece package](https://github.com/google/sentencepiece). WikiLoader will automatically make a 5M corpus out of your data and train on it. Wordpiece tokenizers split your data into a fixed number of so-called *wordpieces*, which may correspond to entire words or subword units. While the process is not morphologically motivated, it has the advantage of being applicable to any language you choose, regardless of its morphological complexity. It also means you end up with a fixed-size vocabulary. Because of these advantages, wordpiece tokenizers are frequently used in modern machine learning applications. 
 
 ```
 from trainspm.trainspm import TrainSPM
@@ -89,7 +89,7 @@ from trainspm.trainspm import TrainSPM
 lang = 'en'
 
 print("Running TrainSPM")
-trainspm = TrainSPM(lang,8000)
+trainspm = TrainSPM(lang,8000) #vocab of 8000 subwords
 trainspm.train_sentencepiece()
 ```
 
@@ -102,6 +102,21 @@ lang = 'en'
 
 print("Running TrainSPM")
 trainspm.train_sentencepiece(data_path='data/en/enwiki-latest-pages-articles1.xml-p1p41242.raw.txt')
+```
+
+Your SentencePiece model and vocabulary are then stored in the *spm* directory of your installation. You can apply them to any new text. For instance, assuming a string *doc* containing the text to be tokenized, you can do:
+
+```
+import sentencepiece as spm
+
+model_path = 'enwiki.8k.2023-11-17.model' #the path of your pretrained model
+doc = "This is a test sentence."
+
+sp = spm.SentencePieceProcessor()
+sp.load(model_path)
+spmdoc = ' '.join([wp for wp in sp.encode_as_pieces(doc)])+'\n'
+print(spmdoc)
+
 ```
 
 
