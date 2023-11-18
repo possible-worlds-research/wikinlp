@@ -28,13 +28,13 @@ class WikiCatProcessor:
             "action": "query",
             "format": "json",
             "list": "allcategories",
-            "acmin": 200,
-            "aclimit": 500
+            "acmin": 20,
+            "aclimit": 5000
         }
 
         f = open(join(processed_dir,"wiki_categories.txt"),'w')
 
-        for i in range(100):
+        for i in range(1000):
             R = S.get(url=self.URL, params=PARAMS)
             DATA = R.json()
 
