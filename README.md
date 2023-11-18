@@ -2,8 +2,10 @@
 
 This module lets you download and preprocess Wikipedia in some language of your choice. Additionally, it offers options for training basic NLP tools on your Wikipedia snapshot. At the moment, the following are offered:
 
-* training a SentencePiece model;
-* training a distributional semantic space;
+* converting (part of) a Wikipedia snapshot into a plain text corpus;
+* making a plain text corpus out of specific Wikipedia categories;
+* training a tokenizer model with the external SentencePiece package;
+* training a distributional semantic space over the SentencePiece vocabulary.
 
 Please check the language code for your Wikipedia: it is the prefix to your Wikipedia url. For instance, The English Wikipedia is at *https://en.wikipedia.org/* so its language code is *en*. The Hindi Wikipedia is at *https://hi.wikipedia.org/*, so its language code is *hi*.
 
@@ -25,9 +27,36 @@ wikiloader.mk_wiki_data(2)
 
 ```
 
-## Training a SentencePiece model
+## Category processing
 
-You can train a SentencePiece model on the Wiki data you have downloaded. WikiLoader will automatically make a 5M corpus out of your data and train on it.
+This module relies on the Wikipedia API. The first thing you may want to do when playing with categories is to get the list of all categories for a language. You can do this as follows.
+
+
+```
+from wikicategories.wikicategories import WikiCatProcessor
+
+lang = 'en'
+
+catprocessor = WikiCatProcessor(lang)
+catprocessor.get_categories()
+```
+
+You will find a category list saved in *data/en/wiki_categories.txt*.
+
+Now, let's assume you have found a couple of categories you are interested in and wish to create a corpus out of those. You would retrieve the pages contained in those categories and then the plain text for each of those pages:
+
+```
+categories = ["Australian women novelists", "Australian women painters"]
+catprocessor.get_category_pages(categories)
+catprocessor.get_page_content(categories)
+```
+
+You should now find two new directories in your *data/en/categories/* folder, named after the two categories in your list. Each directory should contain a *linear.txt* file, which is your plain text corpus for that category, as well as a *titles.txt* file containing the titles of the pages in your corpus.
+
+
+## Training a wordpiece tokenizer
+
+You can train a wordpiece tokenizer on the Wiki data you have downloaded, using the [SentencePiece package](https://github.com/google/sentencepiece). WikiLoader will automatically make a 5M corpus out of your data and train on it.
 
 ```
 from trainspm.trainspm import TrainSPM
@@ -62,7 +91,7 @@ from trainspm.trainspm import TrainSPM
 lang = 'en'
 
 print("Generating SPM corpus")
-trainspm = TrainSPM(lang,8000)
+trainspm = TrainSPM(lang,8000) #Size of your vocabulary file
 trainspm.model_path='./spm/en/enwiki.8k.2023-11-17.model'
 trainspm.apply_sentencepiece()
 
@@ -83,3 +112,5 @@ nns = trainds.compute_nns(top_words=10000)
 for word,ns in nns.items():
     print(word,':',' '.join(ns))
 ```
+
+

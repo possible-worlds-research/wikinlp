@@ -42,9 +42,7 @@ class WikiCatProcessor:
 
             for cat in CATEGORIES:
                 cat_name = cat["*"]
-                m = re.search("[0-9]{4}",cat_name) #ignore dates
-                if not m:
-                    f.write(cat_name+'\n')
+                f.write(cat_name+'\n')
             
             if "continue" in DATA:
                 PARAMS["acfrom"] = DATA["continue"]["accontinue"]
