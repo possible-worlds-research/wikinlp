@@ -129,14 +129,15 @@ from trainds.trainds import TrainDS
 from trainspm.trainspm import TrainSPM
 
 lang = 'en'
+vocab_size = 8000
+spm_model_path= './spm/en/enwiki.8k.2023-11-17.model'
 
 print("Generating SPM corpus")
-trainspm = TrainSPM(lang,8000) #Size of your vocabulary file
-trainspm.model_path='./spm/en/enwiki.8k.2023-11-17.model'
+trainspm = TrainSPM(lang,vocab_size,spm_model_path)
 trainspm.apply_sentencepiece()
 
 print("Running FastText")
-trainds = TrainDS(lang)
+trainds = TrainDS(lang, spm_model_path)
 trainds.train_fasttext(corpus_size=100000000)
 nns = trainds.compute_nns(top_words=100)
 for word,ns in nns.items():
@@ -147,7 +148,7 @@ In case you have previously trained the vector space and simply want to retrieve
 
 ```
 trainds = TrainDS(lang)
-trainds.model_path = "./ds/en/enwiki-latest-pages-articles.xml.full.ft"
+trainds.model_path = "./ds/en/enwiki.8k.2023-11-17.cs100m.ft"
 nns = trainds.compute_nns(top_words=10000)
 for word,ns in nns.items():
     print(word,':',' '.join(ns))

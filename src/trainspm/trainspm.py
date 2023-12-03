@@ -11,12 +11,15 @@ import sentencepiece as spm
 
 class TrainSPM:
 
-    def __init__(self,lang=None, vocab_size=None):
+    def __init__(self,lang=None, vocab_size=None, model_path=None):
         self.lang = lang
         self.vocab_size = vocab_size
         filename = inspect.getframeinfo(inspect.currentframe()).filename
         self.path = os.path.dirname(os.path.abspath(filename))
-        self.model_path = ""
+        if model_path == None:
+            self.model_path = ""
+        else:
+            self.model_path = model_path
         self.train_path = ""
 
     def mk_wiki_training_data(self):
@@ -61,6 +64,8 @@ class TrainSPM:
         date = datetime.today().strftime('%Y-%m-%d')
         if str(self.vocab_size)[-3:] == '000':
             vocab_size_str = str(self.vocab_size)[:-3]+'k'
+        else:
+            vocab_size_str = str(self.vocab_size)
         txt_path_filename = self.lang+'wiki.'+vocab_size_str+'.'+date
         spm.SentencePieceTrainer.train(input=self.train_path, model_prefix=join('spm',self.lang,txt_path_filename), vocab_size=self.vocab_size, minloglevel=2, normalization_rule_name='nmt_nfkc_cf')
         print("\nAll done!! Your sentence piece model is at spm/"+self.lang+"/"+txt_path_filename+"...")
@@ -68,17 +73,23 @@ class TrainSPM:
     def apply_sentencepiece(self):
         data_dir = join(os.getcwd(),join('data',self.lang))
         spm_dir = join(os.getcwd(),join('spm',self.lang))
-        model_path = glob(join(spm_dir,"*model"))[0]
+
+        if self.model_path == '':
+            print("You did not initialise your model with an existing model path. Try again.")
+            return 0
+
+        m = re.search('k\.([^\.]*)\.',self.model_path.split('/')[-1])
+        model_date = m.group(1)
 
         sp = spm.SentencePieceProcessor()
-        sp.load(model_path)
+        sp.load(self.model_path)
         print("\n--- Applying sentencepiece to corpus ---")
         start_doc=""
         doc=""
         txt_paths = glob(join(data_dir,'*raw.txt'))
         for txt_path in txt_paths:
             print("\tApplying spm model to",txt_path)
-            spm_filename = txt_path.replace('.txt','.sp')
+            spm_filename = txt_path.replace('.txt','.'+model_date+'.sp')
             spf = open(spm_filename,'w')
 
             f = open(txt_path,'r')

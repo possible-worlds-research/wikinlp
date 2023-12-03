@@ -14,20 +14,27 @@ fasttext.FastText.eprint = lambda x: None
 
 class TrainDS:
 
-    def __init__(self,lang=None):
+    def __init__(self, lang=None, spm_model_path=None):
         self.lang = lang
         filename = inspect.getframeinfo(inspect.currentframe()).filename
         self.path = os.path.dirname(os.path.abspath(filename))
         self.model_path = ""
         self.train_path = ""
+        if spm_model_path == None:
+            self.spm_model_path = ""
+        else:
+            self.spm_model_path = spm_model_path
 
     def mk_wiki_training_data(self, corpus_size):
         print("\n--- TrainDS: Process corpus for training ---")
         processed_dir = join(os.getcwd(),join('ds',self.lang))
         Path(processed_dir).mkdir(exist_ok=True, parents=True)
 
+        print(self.spm_model_path)
+        m = re.search('k\.([^\.]*)\.',self.spm_model_path.split('/')[-1])
+        model_date = m.group(1)
         data_dir = processed_dir.replace('/ds/','/data/')
-        txt_paths = glob(join(data_dir,f"{self.lang}wiki-latest-pages-articles*.raw.sp"))
+        txt_paths = glob(join(data_dir,f"{self.lang}wiki-latest-pages-articles*.raw.{model_date}.sp"))
 
         ds_train_path = txt_paths[0].replace('raw','full')
         out_file = open(ds_train_path,'w')
@@ -59,7 +66,12 @@ class TrainDS:
         
         print("\n--- TrainDS: Training fasttext on corpus ---")
         sp_path_filename = self.train_path.split('/')[-1]
-        self.model_path = self.train_path.replace('data','ds').replace('.sp','.ft')
+        processed_dir = join(os.getcwd(),join('ds',self.lang))
+        if str(corpus_size)[-6:] == '000000':
+            corpus_size_str = str(corpus_size)[:-6]+'m'
+        else:
+            corpus_size_str = str(corpus_size)
+        self.model_path = join(processed_dir,self.spm_model_path.split('/')[-1].replace('.model','.cs'+corpus_size_str+'.ft'))
 
         model = fasttext.train_unsupervised(self.train_path, model='skipgram')
         model.save_model(self.model_path)
