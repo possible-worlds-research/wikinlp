@@ -52,6 +52,24 @@ wikiloader.mk_wiki_data(2)
 
 ```
 
+By default, the resulting corpus shows documents between *<doc></doc>* tags. The opening *<doc>* tag contains additional information: the title of the page, its url, and the categories it belongs to.
+
+You have further options to preprocess your corpus as you are extracting it. You can choose to 1) tokenize (using the [nltk](https://www.nltk.org/) package); 2) lowercase; 3) leave out document boundaries; 4) only extract particular sections of the Wikipedia documents. For instance, to extract the same corpus as above tokenized and lowercased, with no document boundaries, we would write the following:
+
+```
+from wikiloader.wikiloader import WikiLoader
+
+lang = 'en'
+
+print("Running WikiLoader")
+wikiloader = WikiLoader(lang)
+wikiloader.mk_wiki_data(2, tokenize=True, lower=True, doctags=False)
+
+```
+
+We will show an example of section filtering in the next section.
+
+
 ## Category processing
 
 This module relies on the Wikipedia API. The first thing you may want to do when playing with categories is to get the list of all categories for a language. You can do this as follows.
@@ -76,7 +94,15 @@ catprocessor.get_category_pages(categories)
 catprocessor.get_page_content(categories)
 ```
 
-You should now find two new directories in your *data/en/categories/* folder, named after the two categories in your list. Each directory should contain a *linear.txt* file, which is your plain text corpus for that category, as well as a *titles.txt* file containing the titles of the pages in your corpus.
+You should now find two new directories in your *data/en/categories/* folder, named after the two categories in your list. Each directory should contain a *linear...* file, which is your plain text corpus for that category, as well as a *titles.txt* file containing the titles of the pages in your corpus.
+
+```
+categories = ["Actions novels"]
+catprocessor.get_category_pages(categories)
+catprocessor.get_page_content(categories, sections=['Plot','Plot summary'])
+```
+
+Note that the *sections* argument takes a list of section titles. It usually takes some trial and error to find out all the possible ways that Wikipedia contributors may have entitled a particular section type. All of them can be inserted in the sections list.
 
 
 ## Training a wordpiece tokenizer
@@ -101,6 +127,7 @@ from trainspm.trainspm import TrainSPM
 lang = 'en'
 
 print("Running TrainSPM")
+trainspm = TrainSPM(lang,8000) #vocab of 8000 subwords
 trainspm.train_sentencepiece(data_path='data/en/enwiki-latest-pages-articles1.xml-p1p41242.raw.txt')
 ```
 

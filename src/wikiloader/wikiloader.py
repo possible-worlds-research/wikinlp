@@ -1,10 +1,11 @@
-import inspect, os
-from os.path import join, exists
 import re
 import bz2
 import pickle
 import requests
+import inspect, os
 from pathlib import Path
+from os.path import join, exists
+from nltk.tokenize import word_tokenize
 from wikiextractor.WikiExtractor import process_wiki
 
 
@@ -15,7 +16,7 @@ class WikiLoader:
         filename = inspect.getframeinfo(inspect.currentframe()).filename
         self.path = os.path.dirname(os.path.abspath(filename))
 
-    def mk_wiki_data(self, n_dump_files = None):
+    def mk_wiki_data(self, n_dump_files = None, doctags=True, tokenize=False, lower=True, sections=None):
         processed_dir = join(os.getcwd(),join('data',self.lang))
         Path(processed_dir).mkdir(exist_ok=True, parents=True)
 
@@ -41,7 +42,7 @@ class WikiLoader:
             self.extract_xml(bz2_file)
             self.get_categories(bz2_file)
             cat_file = bz2_file.replace('bz2','cats.pkl')
-            lf = self.mk_linear(bz2_file,cat_file)
+            lf = self.mk_linear(bz2_file, cat_file, doctags=doctags, tokenize=tokenize, lower=lower, sections=sections)
             linear_filenames.append(lf)
         return linear_filenames
 
@@ -138,8 +139,24 @@ class WikiLoader:
         os.remove(uncompressed)
         out_file.close()
 
+    def extract_sections(self, docstr, sections):
+        tmp = ""
+        write = False
+        for l in docstr.split('\n'):
+            m1 = re.search('^\s*==',l)
+            m2 = re.search('^\s*##',l)
+            if (m1 or m2) and write:
+                write = False
+            if write:
+                tmp+= ' '.join(word_tokenize(l))+'\n'
+            for section in sections:
+                m1 = re.search('==\s*'+section+'\s*==',l)
+                m2 = re.search('##\s*'+section,l)
+                if m1 or m2:
+                    write=True
+        return tmp
 
-    def mk_linear(self, bz2_file, cat_file):
+    def mk_linear(self, bz2_file, cat_file, doctags=True, tokenize=False, lower=False, sections=None):
         print("\n---> WikiLoader: Generating linear version of corpus ---")
 
         xml_file = bz2_file.replace('bz2','xml')
@@ -148,17 +165,49 @@ class WikiLoader:
 
         all_categories = pickle.load(open(cat_file,'rb'))
         tmpf = open(tmp_linear_file,'r')
-        linear_filename = tmp_linear_file.replace('tmp','txt')
+        suffix = 'txt'
+        if tokenize:
+            suffix = 'tok.'+suffix
+        if lower:
+            suffix = 'low.'+suffix
+        if doctags:
+            suffix = 'doc.'+suffix
+        if sections:
+            suffix = sections[0].lower()+'.'+suffix
+        linear_filename = tmp_linear_file.replace('tmp',suffix)
         linear_file = open(linear_filename,'w')
+        doc = ''
+        startline = ''
         for l in tmpf:
+            m1 = re.search('^\s*==',l)
+            m2 = re.search('^\s*##',l)
+            if (m1 or m2) and not doctags:
+                continue
             if '<doc' in l:
                 m = re.search('.*title="([^"]*)">',l)
                 title = m.group(1)
                 categories = all_categories[title] 
                 cs = ' categories="'+'|'.join([c for c in categories])+'"'
-                linear_file.write(l.replace('>',cs+'>'))
+                startline = l.replace('>',cs+'>\n')
+            elif '</doc' in l: 
+                if sections:
+                    doc = self.extract_sections(doc,sections)
+                if doc == '':
+                    continue
+                if doctags:
+                    linear_file.write(startline)
+                if tokenize:
+                    tmp = ""
+                    for l in doc.split('\n'):
+                        if l != '':
+                            tmp+= ' '.join(word_tokenize(l))+'\n'
+                    doc = tmp
+                if lower:
+                    doc = doc.lower()
+                linear_file.write(doc)
+                doc = ''
             else:
-                linear_file.write(l.lower())
+                doc+=l+'\n'
         linear_file.close()
         tmpf.close()
         os.remove(tmp_linear_file)

@@ -7,7 +7,7 @@ from os.path import join, exists
 import pickle
 import requests
 from pathlib import Path
-
+from nltk.tokenize import word_tokenize
 
 class WikiCatProcessor:
 
@@ -28,13 +28,13 @@ class WikiCatProcessor:
             "action": "query",
             "format": "json",
             "list": "allcategories",
-            "acmin": 20,
-            "aclimit": 5000
+            "acmin": 20, #only categories with at least that many instances
+            "aclimit": 500 #how many categories in one go
         }
 
         f = open(join(processed_dir,"wiki_categories.txt"),'w')
 
-        for i in range(1000):
+        for i in range(1000): #loop until all categories are returned
             R = S.get(url=self.URL, params=PARAMS)
             DATA = R.json()
 
@@ -68,7 +68,7 @@ class WikiCatProcessor:
                 "list": "categorymembers",
                 "format": "json",
                 "cmtitle": "Category:"+cat,
-                "cmlimit": "100"
+                "cmlimit": "500" #that many pages per call
             }
 
             for i in range(5):
@@ -90,7 +90,25 @@ class WikiCatProcessor:
 
             title_file.close()
 
-    def get_page_content(self, categories):
+    def extract_sections(self, docstr, sections):
+        tmp = ""
+        write = False
+        for l in docstr.split('\n'):
+            m1 = re.search('^\s*==',l)
+            m2 = re.search('^\s*##',l)
+            if (m1 or m2) and write:
+                write = False
+            if write:
+                tmp+= ' '.join(word_tokenize(l))+'\n'
+            for section in sections:
+                m1 = re.search('==\s*'+section+'\s*==',l)
+                m2 = re.search('##\s*'+section,l)
+                if m1 or m2:
+                    write=True
+        return tmp
+
+
+    def get_page_content(self, categories, doctags=True, tokenize=False, lower=True, sections=None):
         def read_titles(filename):
             IDs = []
             titles = []
@@ -114,7 +132,17 @@ class WikiCatProcessor:
             title_file = join(cat_dir,"titles.txt")
             IDs, titles = read_titles(title_file)
 
-            content_file = open(join(cat_dir,"linear.txt"),'w')
+            suffix = 'txt'
+            if tokenize:
+                suffix = 'tok.'+suffix
+            if lower:
+                suffix = 'low.'+suffix
+            if doctags:
+                suffix = 'doc.'+suffix
+            if sections:
+                suffix = sections[0].lower()+'.'+suffix
+            
+            content_file = open(join(cat_dir,"linear."+suffix),'w')
 
             for i in range(len(titles)):
                 PARAMS = {
@@ -133,8 +161,22 @@ class WikiCatProcessor:
 
                 for page in PAGES:
                     extract = PAGES[page]["extract"]
-                    content_file.write("<doc url=\"https://"+self.lang+".wikipedia.org/wiki/?curid="+IDs[i]+"\" id=\""+IDs[i]+"\" title=\""+titles[i]+"\">\n")
+                    if sections:
+                        extract = self.extract_sections(extract,sections)
+                    if extract == '':
+                        continue
+                    if doctags:
+                        content_file.write("<doc url=\"https://"+self.lang+".wikipedia.org/wiki/?curid="+IDs[i]+"\" id=\""+IDs[i]+"\" title=\""+titles[i]+"\">\n")
+                    if tokenize:
+                        tmp = ""
+                        for l in extract.split('\n'):
+                            if l != '':
+                                tmp+= ' '.join(word_tokenize(l))+'\n'
+                        extract = tmp
+                    if lower:
+                        extract = extract.lower()
                     content_file.write(extract+'\n')
-                    content_file.write("</doc>\n\n")
+                    if doctags:
+                        content_file.write("</doc>\n\n")
 
             content_file.close()
