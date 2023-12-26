@@ -11,7 +11,7 @@ Please check the language code for your Wikipedia: it is the prefix to your Wiki
 
 **Warning:** For people who are new to Wikipedia processing... anything you do on English, and generally on large snaphots, will take time. So make yourself a cup of tea before you start.
 
-**Credits:** This package includes a modified version of the excellent [wikiextractor](https://github.com/attardi/wikiextractor) code. It also builds on various existing NLP tools, most notably [SentencePiece](https://github.com/google/sentencepiece) and [FastText](https://github.com/facebookresearch/fastText).
+**Credits:** This package includes a modified version of the excellent [wikiextractor](https://github.com/attardi/wikiextractor) code. It also builds on various existing NLP tools, most notably [NLTK](https://www.nltk.org/), [SentencePiece](https://github.com/google/sentencepiece) and [FastText](https://github.com/facebookresearch/fastText).
 
 
 ## Installation
@@ -107,19 +107,9 @@ Note that the *sections* argument takes a list of section titles. It usually tak
 
 ## Training a wordpiece tokenizer
 
-You can train a wordpiece tokenizer on the Wiki data you have downloaded, using the [SentencePiece package](https://github.com/google/sentencepiece). WikiLoader will automatically make a 5M corpus out of your data and train on it. Wordpiece tokenizers split your data into a fixed number of so-called *wordpieces*, which may correspond to entire words or subword units. While the process is not morphologically motivated, it has the advantage of being applicable to any language you choose, regardless of its morphological complexity. It also means you end up with a fixed-size vocabulary. Because of these advantages, wordpiece tokenizers are frequently used in modern machine learning applications. 
+We have already seen that you can apply standard tokenization to your corpus while extracting it. Alternatively, you can train a wordpiece tokenizer on the Wiki data you have downloaded, using the [SentencePiece package](https://github.com/google/sentencepiece). WikiLoader will automatically make a 5M corpus out of your data and train on it. Wordpiece tokenizers split your data into a fixed number of so-called *wordpieces*, which may correspond to entire words or subword units. While the process is not morphologically motivated, it has the advantage of being applicable to any language you choose, regardless of its morphological complexity. It also means you end up with a fixed-size vocabulary. Because of these advantages, wordpiece tokenizers are frequently used in modern machine learning applications. 
 
-```
-from trainspm.trainspm import TrainSPM
-
-lang = 'en'
-
-print("Running TrainSPM")
-trainspm = TrainSPM(lang,8000) #vocab of 8000 subwords
-trainspm.train_sentencepiece()
-```
-
-In case you would like to train SentencePiece on a specific file of your choice, you can provide its path:
+In order to train SentencePiece on a specific file of your choice, follow this template (replacing the filename with your own):
 
 ```
 from trainspm.trainspm import TrainSPM
