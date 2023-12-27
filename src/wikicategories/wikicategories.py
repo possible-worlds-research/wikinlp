@@ -125,6 +125,7 @@ class WikiCatProcessor:
 
         processed_dir = join(os.getcwd(),join('data',self.lang))
         Path(processed_dir).mkdir(exist_ok=True, parents=True)
+        corpora = []
 
         print("\n---> WikiCategories: downloading content of pages for selected categories")
         S = requests.Session()
@@ -185,4 +186,6 @@ class WikiCatProcessor:
                         content_file.write("</doc>\n\n")
 
             content_file.close()
-            print("\n---> WikiCategories: your preprocessed corpus is at", output_path)
+            print("\t>> Your preprocessed corpus is at", output_path)
+            corpora.append(output_path)
+        return corpora
