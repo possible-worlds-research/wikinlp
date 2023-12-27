@@ -146,7 +146,7 @@ class WikiCatProcessor:
             if sections:
                 suffix = sections[0].lower()+'.'+suffix
            
-            output_path = join(cat_dir,"linear."+suffix)
+            output_path = join(cat_dir,"linear."+cat.lower().replace(' ','_')+'.'+suffix)
             content_file = open(output_path,'w')
 
             for i in range(len(titles)):
