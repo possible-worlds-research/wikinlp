@@ -212,6 +212,7 @@ class WikiLoader:
         tmpf.close()
         os.remove(tmp_linear_file)
         os.remove(xml_file)
+        print("\n---> WikiLoader: your preprocessed corpus is at", linear_filename)
         return linear_filename
 
 

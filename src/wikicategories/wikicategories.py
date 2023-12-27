@@ -17,7 +17,7 @@ class WikiCatProcessor:
         self.path = os.path.dirname(os.path.abspath(filename))
         self.URL = "https://"+self.lang+".wikipedia.org/w/api.php"
 
-    def get_categories(self):
+    def get_categories(self, mincount=20, maxcount=500):
         processed_dir = join(os.getcwd(),join('data',self.lang))
         Path(processed_dir).mkdir(exist_ok=True, parents=True)
 
@@ -28,13 +28,15 @@ class WikiCatProcessor:
             "action": "query",
             "format": "json",
             "list": "allcategories",
-            "acmin": 20, #only categories with at least that many instances
-            "aclimit": 500 #how many categories in one go
+            "acmin": mincount, #only categories with at least that many instances
+            "acmax": maxcount, #only categories with at most that many instances
+            "aclimit": 500 #how many categories to return in one go
         }
 
-        f = open(join(processed_dir,"wiki_categories.txt"),'w')
+        cat_file_path = join(processed_dir,"wiki_categories.min."+str(mincount)+".max."+str(maxcount)+".txt")
+        f = open(cat_file_path,'w')
 
-        for i in range(1000): #loop until all categories are returned
+        while True: #loop until all categories are returned
             R = S.get(url=self.URL, params=PARAMS)
             DATA = R.json()
 
@@ -50,6 +52,8 @@ class WikiCatProcessor:
                 break
 
         f.close()
+        print("\n---> WikiCategories: your category list is at", cat_file_path)
+        return cat_file_path
 
     def get_category_pages(self, categories):
         processed_dir = join(os.getcwd(),join('data',self.lang))
@@ -108,7 +112,7 @@ class WikiCatProcessor:
         return tmp
 
 
-    def get_page_content(self, categories, doctags=True, tokenize=False, lower=True, sections=None):
+    def get_page_content(self, categories, doctags=True, tokenize=False, lower=False, sections=None):
         def read_titles(filename):
             IDs = []
             titles = []
@@ -141,8 +145,9 @@ class WikiCatProcessor:
                 suffix = 'doc.'+suffix
             if sections:
                 suffix = sections[0].lower()+'.'+suffix
-            
-            content_file = open(join(cat_dir,"linear."+suffix),'w')
+           
+            output_path = join(cat_dir,"linear."+suffix)
+            content_file = open(output_path,'w')
 
             for i in range(len(titles)):
                 PARAMS = {
@@ -180,3 +185,4 @@ class WikiCatProcessor:
                         content_file.write("</doc>\n\n")
 
             content_file.close()
+            print("\n---> WikiCategories: your preprocessed corpus is at", output_path)
