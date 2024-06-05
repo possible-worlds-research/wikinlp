@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools == 68.2.2",
+    "setuptools==68.2.2",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
@@ -9,9 +9,10 @@ build-backend = "setuptools.build_meta"
 name = "wikiloader"
 version = "0.1.0"
 dependencies = [
-    "requests==2.22.0",
-    "sentencepiece==0.1.97",
-    "fasttext==0.9.2",
-    "scipy==1.10.1"
+    "requests>=2.22.0",
+    "sentencepiece>=0.1.97",
+    "fasttext>=0.9.2",
+    "scipy>=1.10.1",
+    "nltk",
 ]
 

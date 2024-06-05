@@ -2,6 +2,7 @@
 
 import requests
 import re
+from time import sleep
 import inspect, os
 from os.path import join, exists
 import pickle
@@ -63,7 +64,7 @@ class WikiCatProcessor:
         S = requests.Session()
 
         for cat in categories:
-            cat_dir = join(processed_dir,"categories/"+cat.replace(' ','_'))
+            cat_dir = join(processed_dir,"categories/"+cat.replace(' ','_').replace('/','_'))
             Path(cat_dir).mkdir(exist_ok=True, parents=True)
             title_file = open(join(cat_dir,"titles.txt"),'w')
 
@@ -103,16 +104,16 @@ class WikiCatProcessor:
             if (m1 or m2) and write:
                 write = False
             if write:
-                tmp+= ' '.join(word_tokenize(l))+'\n'
+                tmp+=l+'\n'
             for section in sections:
-                m1 = re.search('==\s*'+section+'\s*==',l)
-                m2 = re.search('##\s*'+section,l)
+                m1 = re.search('==\s*'+section+'\s*==',l, re.IGNORECASE)
+                m2 = re.search('##\s*'+section,l, re.IGNORECASE)
                 if m1 or m2:
                     write=True
         return tmp
 
 
-    def get_page_content(self, categories, doctags=True, tokenize=False, lower=False, sections=None):
+    def get_page_content(self, categories, doctags=True, tokenize=False, lower=False, sections=None, minlength=50, sleep_between_cats=10, override=False):
         def read_titles(filename):
             IDs = []
             titles = []
@@ -132,7 +133,7 @@ class WikiCatProcessor:
 
         for cat in categories:
             print("\t>> Processing category",cat)
-            cat_dir = join(processed_dir,"categories/"+cat.replace(' ','_'))
+            cat_dir = join(processed_dir,"categories/"+cat.replace(' ','_').replace('/','_'))
             Path(cat_dir).mkdir(exist_ok=True, parents=True)
             title_file = join(cat_dir,"titles.txt")
             IDs, titles = read_titles(title_file)
@@ -147,7 +148,14 @@ class WikiCatProcessor:
             if sections:
                 suffix = sections[0].lower()+'.'+suffix
            
-            output_path = join(cat_dir,"linear."+cat.lower().replace(' ','_')+'.'+suffix)
+            output_path = join(cat_dir,"linear."+cat.lower().replace(' ','_').replace('/','_')+'.'+suffix)
+            if not override and exists(output_path):
+                print("\t>> Corpus already exists. Skipping processing...")
+                continue
+            
+            print(f"\t>> {len(titles)} pages found. Taking a little nap for {sleep_between_cats} seconds...")
+            sleep(sleep_between_cats)
+            print("\t>> Processing now...")
             content_file = open(output_path,'w')
 
             for i in range(len(titles)):
@@ -166,24 +174,31 @@ class WikiCatProcessor:
                 PAGES = DATA["query"]["pages"]
 
                 for page in PAGES:
+                    docstart = ""
                     extract = PAGES[page]["extract"]
                     if sections:
                         extract = self.extract_sections(extract,sections)
                     if extract == '':
                         continue
                     if doctags:
-                        content_file.write("<doc url=\"https://"+self.lang+".wikipedia.org/wiki/?curid="+IDs[i]+"\" id=\""+IDs[i]+"\" title=\""+titles[i]+"\">\n")
-                    if tokenize:
-                        tmp = ""
-                        for l in extract.split('\n'):
-                            if l != '':
+                        docstart = "<doc url=\"https://"+self.lang+".wikipedia.org/wiki/?curid="+IDs[i]+"\" id=\""+IDs[i]+"\" title=\""+titles[i]+"\">\n"
+                    tmp = ""
+                    for l in extract.split('\n'):
+                        if l != '':
+                            if tokenize:
                                 tmp+= ' '.join(word_tokenize(l))+'\n'
-                        extract = tmp
+                            else:
+                                tmp+=l+'\n'
+                    extract = tmp
                     if lower:
                         extract = extract.lower()
-                    content_file.write(extract+'\n')
-                    if doctags:
-                        content_file.write("</doc>\n\n")
+
+                    if len(extract.split()) > minlength:
+                        if doctags:
+                            content_file.write(docstart)
+                        content_file.write(extract)
+                        if doctags:
+                            content_file.write("</doc>\n")
 
             content_file.close()
             print("\t>> Your preprocessed corpus is at", output_path)

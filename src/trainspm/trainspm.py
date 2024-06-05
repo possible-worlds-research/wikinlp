@@ -86,7 +86,7 @@ class TrainSPM:
         print("\n--- Applying sentencepiece to corpus ---")
         start_doc=""
         doc=""
-        txt_paths = glob(join(data_dir,'*raw.txt'))
+        txt_paths = glob(join(data_dir,'*.raw.*.txt'))
         for txt_path in txt_paths:
             print("\tApplying spm model to",txt_path)
             spm_filename = txt_path.replace('.txt','.'+model_date+'.sp')
@@ -106,6 +106,6 @@ class TrainSPM:
                 else:
                     if len(l) > 0:
                         doc+=l
-        f.close()
+            f.close()
         print("\n All done!! Your sentencepieced corpus is at",data_dir,".")
 

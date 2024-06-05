@@ -16,7 +16,7 @@ class WikiLoader:
         filename = inspect.getframeinfo(inspect.currentframe()).filename
         self.path = os.path.dirname(os.path.abspath(filename))
 
-    def mk_wiki_data(self, n_dump_files = None, doctags=True, tokenize=False, lower=True, sections=None):
+    def mk_wiki_data(self, n_dump_files = None, start_from = 0, doctags=True, tokenize=False, lower=True, sections=None):
         processed_dir = join(os.getcwd(),join('data',self.lang))
         Path(processed_dir).mkdir(exist_ok=True, parents=True)
 
@@ -29,7 +29,7 @@ class WikiLoader:
         else:
             n = min(n_dump_files, len(wiki_paths))
 
-        for i in range(n):
+        for i in range(start_from,start_from+n):
             wiki_path = wiki_paths[i]
             print("\n---> WikiLoader: downloading ", wiki_path, "(dump file",i+1,")")
             bz2_file = join(processed_dir,wiki_path.split('/')[-1])
@@ -199,11 +199,12 @@ class WikiLoader:
                 if tokenize:
                     tmp = ""
                     for l in doc.split('\n'):
-                        if l != '':
+                        if l != '' and not l.isspace():
                             tmp+= ' '.join(word_tokenize(l))+'\n'
                     doc = tmp
                 if lower:
                     doc = doc.lower()
+                doc+='\n</doc>\n'
                 linear_file.write(doc)
                 doc = ''
             else:
