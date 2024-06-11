@@ -12,7 +12,7 @@ from scipy.spatial.distance import cdist
 
 fasttext.FastText.eprint = lambda x: None
 
-class TrainDS:
+class DSTrainer:
 
     def __init__(self, lang=None, spm_model_path=None):
         self.lang = lang

@@ -9,7 +9,7 @@ from os.path import join, exists
 from datetime import datetime
 import sentencepiece as spm
 
-class TrainSPM:
+class SPMTrainer:
 
     def __init__(self,lang=None, vocab_size=None, model_path=None):
         self.lang = lang
@@ -29,9 +29,9 @@ class TrainSPM:
 
         data_dir = processed_dir.replace('spm','data')
         try:
-            txt_path = glob(join(data_dir,f"{self.lang}wiki-latest-pages-articles1.xml*.raw.txt"))[0]
+            txt_path = glob(join(data_dir,f"{self.lang}wiki-latest-pages-articles1.xml*.raw.*txt"))[0]
         except:
-            txt_path = join(data_dir,f"{self.lang}wiki-latest-pages-articles.xml.raw.txt")
+            txt_path = glob(join(data_dir,f"{self.lang}wiki-latest-pages-articles.xml*.raw.*txt"))[0]
         
         spm_train_path = txt_path.replace('raw','5M')
         out_file = open(spm_train_path,'w')
@@ -60,7 +60,7 @@ class TrainSPM:
             self.mk_wiki_training_data()
         else:
             self.train_path = data_path
-        print("\n--- TrainSPM: Training sentencepiece on corpus ---")
+        print(f"\n--- TrainSPM: Training sentencepiece on corpus {data_path} ---")
         date = datetime.today().strftime('%Y-%m-%d')
         if str(self.vocab_size)[-3:] == '000':
             vocab_size_str = str(self.vocab_size)[:-3]+'k'

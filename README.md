@@ -25,13 +25,13 @@ sudo apt install python3-pip
 sudo apt install python3-virtualenv
 ```
 
-Then, create a directory for wikiloader, make your virtual environment and install the package:
+Then, create a directory for WikiNLP, make your virtual environment and install the package:
 
 ```
-mkdir wikiloader
-cd wikiloader
+mkdir wikinlp
+cd wikinlp
 virtualenv env && source env/bin/activate
-pip install git+https://github.com/possible-worlds-xyz/wikiloader.git
+pip install git+https://github.com/possible-worlds-research/wikinlp.git
 ```
 
 
@@ -42,13 +42,13 @@ Wikipedia dumps can be very large and take several hours to be downloaded and pr
 Here is an example usage, which loads and processes two files from the English Wikipedia dump:
 
 ```
-from wikinlp.wikinlp import WikiNLP
+from wikinlp.downloader import Downloader
 
 lang = 'en'
 
-print("Running WikiLoader")
-wikiloader = WikiLoader(lang)
-wikiloader.mk_wiki_data(2)
+print("Running WikiNLP downloader")
+wikinlp = Downloader(lang)
+wikinlp.mk_wiki_data(2)
 
 ```
 
@@ -57,13 +57,13 @@ By default, the resulting corpus shows documents between *<doc></doc>* tags. The
 You have further options to preprocess your corpus as you are extracting it. You can choose to 1) tokenize (using the [nltk](https://www.nltk.org/) package); 2) lowercase; 3) leave out document boundaries; 4) only extract particular sections of the Wikipedia documents. For instance, to extract the same corpus as above tokenized and lowercased, with no document boundaries, we would write the following:
 
 ```
-from wikiloader.wikiloader import WikiLoader
+from wikinlp.downloader import Downloader
 
 lang = 'en'
 
-print("Running WikiLoader")
-wikiloader = WikiLoader(lang)
-wikiloader.mk_wiki_data(2, tokenize=True, lower=True, doctags=False)
+print("Running WikiNLP downloader")
+wikinlp = Downloader(lang)
+wikinlp.mk_wiki_data(2, tokenize=True, lower=True, doctags=False)
 
 ```
 
@@ -76,15 +76,25 @@ This module relies on the Wikipedia API. The first thing you may want to do when
 
 
 ```
-from wikicategories.wikicategories import WikiCatProcessor
+from wikinlp.categories import CatProcessor
 
 lang = 'en'
 
-catprocessor = WikiCatProcessor(lang)
+catprocessor = CatProcessor(lang)
 catprocessor.get_categories()
 ```
 
-You will find a category list saved in *data/en/wiki_categories.txt*.
+You will find a category list saved in *data/en/wiki_categories.txt*. By default, CatProcessor extracts a list of categories containing between 20 and 500 documents. You can change the min and max values when calling the function *get_categories*:
+
+```
+from wikinlp.categories import CatProcessor
+
+lang = 'en'
+
+catprocessor = CatProcessor(lang)
+catprocessor.get_categories(mincount=5, maxcount=100)
+```
+
 
 Now, let's assume you have found a couple of categories you are interested in and wish to create a corpus out of those. You would retrieve the pages contained in those categories and then the plain text for each of those pages:
 
@@ -96,8 +106,16 @@ catprocessor.get_page_content(categories)
 
 You should now find two new directories in your *data/en/categories/* folder, named after the two categories in your list. Each directory should contain a *linear...* file, which is your plain text corpus for that category, as well as a *titles.txt* file containing the titles of the pages in your corpus.
 
+NB: by default, CatProcessor takes a little nap after processing each category. This is meant to ensure that we don't overload the Wikipedia API. If you are just downloading a couple of categories, you can reduce the sleeping time:
+
 ```
-categories = ["Actions novels"]
+catprocessor.get_page_content(categories, sleep_between_cats=1)
+```
+
+You can even select particular sections of Wikipedia pages rather than extracting the whole document:
+
+```
+categories = ["Action novels"]
 catprocessor.get_category_pages(categories)
 catprocessor.get_page_content(categories, sections=['Plot','Plot summary'])
 ```
@@ -107,18 +125,16 @@ Note that the *sections* argument takes a list of section titles. It usually tak
 
 ## Training a wordpiece tokenizer
 
-We have already seen that you can apply standard tokenization to your corpus while extracting it. Alternatively, you can train a wordpiece tokenizer on the Wiki data you have downloaded, using the [SentencePiece package](https://github.com/google/sentencepiece). WikiLoader will automatically make a 5M corpus out of your data and train on it. Wordpiece tokenizers split your data into a fixed number of so-called *wordpieces*, which may correspond to entire words or subword units. While the process is not morphologically motivated, it has the advantage of being applicable to any language you choose, regardless of its morphological complexity. It also means you end up with a fixed-size vocabulary. Because of these advantages, wordpiece tokenizers are frequently used in modern machine learning applications. 
-
-In order to train SentencePiece on a specific file of your choice, follow this template (replacing the filename with your own):
+We have already seen that you can apply standard tokenization to your corpus while extracting it. Alternatively, you can train a wordpiece tokenizer on the Wiki data you have downloaded, using the [SentencePiece package](https://github.com/google/sentencepiece). WikiNLP will automatically make a 5M corpus out of your data and train on it. Wordpiece tokenizers split your data into a fixed number of so-called *wordpieces*, which may correspond to entire words or subword units. While the process is not morphologically motivated, it has the advantage of being applicable to any language you choose, regardless of its morphological complexity. It also means you end up with a fixed-size vocabulary. Because of these advantages, wordpiece tokenizers are frequently used in modern machine learning applications. 
 
 ```
-from trainspm.trainspm import TrainSPM
+from wikinlp.trainspm import SPMTrainer
 
 lang = 'en'
 
 print("Running TrainSPM")
-trainspm = TrainSPM(lang,8000) #vocab of 8000 subwords
-trainspm.train_sentencepiece(data_path='data/en/enwiki-latest-pages-articles1.xml-p1p41242.raw.txt')
+trainspm = SPMTrainer(lang,8000) #vocab of 8000 subwords
+trainspm.train_sentencepiece()
 ```
 
 Your SentencePiece model and vocabulary are then stored in the *spm* directory of your installation. You can apply them to any new text. For instance, assuming a string *doc* containing the text to be tokenized, you can do:
@@ -139,22 +155,22 @@ print(spmdoc)
 
 ## Training a word vector model for the SentencePiece vocabulary
 
-Once you have a preprocessed Wiki dump and a SentencePiece model trained on that dump, you can compute a word vector space for each word piece in your model and perform similarity computations over that space. The WikiLoader module uses [FastText](https://github.com/facebookresearch/fastText) by default for the vector space construction. Here is some example code, which first loads a previously trained SentencePiece model, applies it to the wiki data that was originally downloaded, and uses the tokenized corpus to train a vector space.
+Once you have a preprocessed Wiki dump and a SentencePiece model trained on that dump, you can compute a word vector space for each word piece in your model and perform similarity computations over that space. The WikiNLP module uses [FastText](https://github.com/facebookresearch/fastText) by default for the vector space construction. Here is some example code, which first loads a previously trained SentencePiece model, applies it to the wiki data that was originally downloaded, and uses the tokenized corpus to train a vector space.
 
 ```
-from trainds.trainds import TrainDS
-from trainspm.trainspm import TrainSPM
+from wikinlp.trainds import DSTrainer
+from wikinlp.trainspm import SPMTrainer
 
 lang = 'en'
 vocab_size = 8000
 spm_model_path= './spm/en/enwiki.8k.2023-11-17.model'
 
 print("Generating SPM corpus")
-trainspm = TrainSPM(lang,vocab_size,spm_model_path)
+trainspm = SPMTrainer(lang,vocab_size,spm_model_path)
 trainspm.apply_sentencepiece()
 
 print("Running FastText")
-trainds = TrainDS(lang, spm_model_path)
+trainds = DSTrainer(lang, spm_model_path)
 trainds.train_fasttext(corpus_size=100000000)
 nns = trainds.compute_nns(top_words=100)
 for word,ns in nns.items():
@@ -164,7 +180,7 @@ for word,ns in nns.items():
 In case you have previously trained the vector space and simply want to retrieve the nearest neighbours, you can load the trained model this way:
 
 ```
-trainds = TrainDS(lang)
+trainds = DSTrainer(lang)
 trainds.model_path = "./ds/en/enwiki.8k.2023-11-17.cs100m.ft"
 nns = trainds.compute_nns(top_words=10000)
 for word,ns in nns.items():

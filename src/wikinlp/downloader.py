@@ -9,7 +9,7 @@ from nltk.tokenize import word_tokenize
 from wikiextractor.WikiExtractor import process_wiki
 
 
-class WikiNLP:
+class Downloader:
 
     def __init__(self,lang=None):
         self.lang = lang
@@ -194,8 +194,6 @@ class WikiNLP:
                     doc = self.extract_sections(doc,sections)
                 if doc == '':
                     continue
-                if doctags:
-                    linear_file.write(startline)
                 if tokenize:
                     tmp = ""
                     for l in doc.split('\n'):
@@ -204,8 +202,12 @@ class WikiNLP:
                     doc = tmp
                 if lower:
                     doc = doc.lower()
-                doc+='\n</doc>\n'
+                doc+='\n'
+                if doctags:
+                    linear_file.write(startline)
                 linear_file.write(doc)
+                if doctags:
+                    linear_file.write('</doc>\n')
                 doc = ''
             else:
                 doc+=l+'\n'

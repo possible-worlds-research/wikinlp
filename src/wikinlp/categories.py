@@ -10,7 +10,7 @@ import requests
 from pathlib import Path
 from nltk.tokenize import word_tokenize
 
-class WikiCatProcessor:
+class CatProcessor:
 
     def __init__(self,lang=None):
         self.lang = lang
