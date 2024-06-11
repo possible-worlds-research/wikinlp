@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "wikiloader"
+name = "wikinlp"
 version = "0.1.0"
 dependencies = [
     "requests>=2.22.0",

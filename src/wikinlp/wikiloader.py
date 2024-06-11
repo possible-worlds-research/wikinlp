@@ -9,7 +9,7 @@ from nltk.tokenize import word_tokenize
 from wikiextractor.WikiExtractor import process_wiki
 
 
-class WikiLoader:
+class WikiNLP:
 
     def __init__(self,lang=None):
         self.lang = lang
@@ -31,7 +31,7 @@ class WikiLoader:
 
         for i in range(start_from,start_from+n):
             wiki_path = wiki_paths[i]
-            print("\n---> WikiLoader: downloading ", wiki_path, "(dump file",i+1,")")
+            print("\n---> WikiNLP: downloading ", wiki_path, "(dump file",i+1,")")
             bz2_file = join(processed_dir,wiki_path.split('/')[-1])
             if exists(bz2_file):
                 print("     File already exists. Skipping download.")
@@ -59,7 +59,7 @@ class WikiLoader:
             return f.read().splitlines()
 
     def get_wiki_links(self):
-        print("\n---> WikiLoader: Getting wiki links for download.")
+        print("\n---> WikiNLP: Getting wiki links for download.")
         html = requests.get(url = 'https://dumps.wikimedia.org/'+self.lang+'wiki/latest/').text
         match = re.findall(self.lang+'wiki-latest-pages-articles[0-9]*\.xml-p[0-9]*p[0-9]*\.bz2', html)
         if len(match) == 0:
@@ -84,7 +84,7 @@ class WikiLoader:
         return filename
 
     def get_categories(self, bz2_file):
-        print("\n---> WikiLoader: Get categories from corpus ---")
+        print("\n---> WikiNLP: Get categories from corpus ---")
         xml_file = bz2_file.replace('bz2','xml')
         all_categories = {}
 
@@ -116,7 +116,7 @@ class WikiLoader:
 
 
     def extract_xml(self, bz2_file):
-        print("\n---> WikiLoader: Extracting XML version of corpus.")
+        print("\n---> WikiNLP: Extracting XML version of corpus.")
 
         out_file = open(bz2_file.replace('bz2','xml'),'w')
         uncompressed = self.bz2_uncompress(bz2_file)
@@ -157,7 +157,7 @@ class WikiLoader:
         return tmp
 
     def mk_linear(self, bz2_file, cat_file, doctags=True, tokenize=False, lower=False, sections=None):
-        print("\n---> WikiLoader: Generating linear version of corpus ---")
+        print("\n---> WikiNLP: Generating linear version of corpus ---")
 
         xml_file = bz2_file.replace('bz2','xml')
         tmp_linear_file = bz2_file.replace('bz2','raw.tmp')
@@ -213,7 +213,7 @@ class WikiLoader:
         tmpf.close()
         os.remove(tmp_linear_file)
         os.remove(xml_file)
-        print("\n---> WikiLoader: your preprocessed corpus is at", linear_filename)
+        print("\n---> WikiNLP: your preprocessed corpus is at", linear_filename)
         return linear_filename
 
 

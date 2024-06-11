@@ -1,4 +1,4 @@
-# WikiLoader
+# WikiNLP
 
 This package lets you download and preprocess Wikipedia in some language of your choice. You don't have to worry about finding the latest snapshot, downloading it, figuring out how to extract plain text. All is done automatically. Additionally, the package offers options for training basic NLP tools on your Wikipedia snapshot. At the moment, the following are offered:
 
@@ -37,12 +37,12 @@ pip install git+https://github.com/possible-worlds-xyz/wikiloader.git
 
 ## Loading a Wikipedia snapshot
 
-Wikipedia dumps can be very large and take several hours to be downloaded and processed. So WikiLoader allows you to set a limit on the number of files you download. Download happens in order, from snapshot file number 1 up.
+Wikipedia dumps can be very large and take several hours to be downloaded and processed. So WikiNLP allows you to set a limit on the number of files you download. Download happens in order, from snapshot file number 1 up.
 
 Here is an example usage, which loads and processes two files from the English Wikipedia dump:
 
 ```
-from wikiloader.wikiloader import WikiLoader
+from wikinlp.wikinlp import WikiNLP
 
 lang = 'en'
 
