@@ -34,7 +34,7 @@ class DSTrainer:
         m = re.search('k\.([^\.]*)\.',self.spm_model_path.split('/')[-1])
         model_date = m.group(1)
         data_dir = processed_dir.replace('/ds/','/data/')
-        txt_paths = glob(join(data_dir,f"{self.lang}wiki-latest-pages-articles*.raw.{model_date}.sp"))
+        txt_paths = glob(join(data_dir,f"{self.lang}wiki-latest-pages-articles*.raw.*{model_date}.sp"))
 
         ds_train_path = txt_paths[0].replace('raw','full')
         out_file = open(ds_train_path,'w')
