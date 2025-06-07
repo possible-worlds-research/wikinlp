@@ -124,6 +124,8 @@ class CatProcessor:
         link_file_path = join(processed_dir,"wiki_extlinks.txt")
         f = open(link_file_path,'w')
         for k, v in PAGES.items():
+            if "extlinks" not in v:
+                continue
             for extlink in v["extlinks"]:
                 for _, l in extlink.items():
                     extlinks.append(l)
