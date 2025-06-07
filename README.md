@@ -122,6 +122,16 @@ catprocessor.get_page_content(categories, sections=['Plot','Plot summary'])
 
 Note that the *sections* argument takes a list of section titles. It usually takes some trial and error to find out all the possible ways that Wikipedia contributors may have entitled a particular section type. All of them can be inserted in the sections list.
 
+Finally, it is also possible to get the external links for particular categories. Here is a minimal example retrieving the external links from simple Wikipedia for the category '1908 books':
+
+```
+from wikinlp.categories import CatProcessor
+
+lang = 'simple'
+catprocessor = CatProcessor(lang)
+catprocessor.get_page_extlinks(['1908 books'])
+```
+
 
 ## Training a wordpiece tokenizer
 

@@ -63,6 +63,7 @@ class CatProcessor:
         print("\n---> WikiCategories: downloading pages for selected categories")
         S = requests.Session()
 
+        titles = [] # All titles across categories
         for cat in categories:
             cat_dir = join(processed_dir,"categories/"+cat.replace(' ','_').replace('/','_'))
             Path(cat_dir).mkdir(exist_ok=True, parents=True)
@@ -87,6 +88,7 @@ class CatProcessor:
                     ID = str(page["pageid"])
                     if title[:9] != "Category:":
                         title_file.write(ID+' '+title+'\n')
+                        titles.append(title)
          
                 if "continue" in DATA:
                     PARAMS["cmcontinue"] = DATA["continue"]["cmcontinue"]
@@ -94,6 +96,44 @@ class CatProcessor:
                     break
 
             title_file.close()
+        return titles
+
+
+    def get_page_extlinks(self, categories):
+        processed_dir = join(os.getcwd(),join('data',self.lang))
+        Path(processed_dir).mkdir(exist_ok=True, parents=True)
+        titles = self.get_category_pages(categories)
+
+        print("\n---> WikiCategories: getting external links for selected categories")
+        S = requests.Session()
+
+        URL = "https://en.wikipedia.org/w/api.php"
+
+        PARAMS = {
+            "action": "query",
+            "format": "json",
+            "titles": titles,
+            "prop": "extlinks",
+            "ellimit": "max"
+        }
+
+        R = S.get(url=URL, params=PARAMS)
+        DATA = R.json()
+
+        PAGES = DATA["query"]["pages"]
+
+        extlinks = []
+        link_file_path = join(processed_dir,"wiki_extlinks.txt")
+        f = open(link_file_path,'w')
+        for k, v in PAGES.items():
+            for extlink in v["extlinks"]:
+                for _, l in extlink.items():
+                    extlinks.append(l)
+                    f.write(l+'\n')
+        print("\t>> Your external links are at", link_file_path)
+        return extlinks
+
+
 
     def extract_sections(self, docstr, sections):
         tmp = ""
