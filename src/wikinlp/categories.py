@@ -105,19 +105,18 @@ class CatProcessor:
         titles = self.get_category_pages(categories)
 
         print("\n---> WikiCategories: getting external links for selected categories")
+        print(titles)
         S = requests.Session()
-
-        URL = "https://en.wikipedia.org/w/api.php"
 
         PARAMS = {
             "action": "query",
             "format": "json",
-            "titles": titles,
+            "titles": '|'.join(titles),
             "prop": "extlinks",
             "ellimit": "max"
         }
 
-        R = S.get(url=URL, params=PARAMS)
+        R = S.get(url=self.URL, params=PARAMS)
         DATA = R.json()
 
         PAGES = DATA["query"]["pages"]
