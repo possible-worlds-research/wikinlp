@@ -105,7 +105,6 @@ class CatProcessor:
         titles = self.get_category_pages(categories)
 
         print("\n---> WikiCategories: getting external links for selected categories")
-        print(titles)
         S = requests.Session()
 
         PARAMS = {
