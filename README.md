@@ -72,15 +72,18 @@ We will show an example of section filtering in the next section.
 
 ## Category processing
 
-This module relies on the Wikipedia API. The first thing you may want to do when playing with categories is to get the list of all categories for a language. You can do this as follows.
+This module relies on the Wikipedia API. This means you will have to set up a user agent to tell Wikipedia who you are (if you don't, you will most likely have your request blocked). See the [Wikimedia Foundation user agent policy](https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy) for more detail.
+
+The first thing you may want to do when playing with categories is to get the list of all categories for a language. You can do this as follows.
 
 
 ```
 from wikinlp.categories import CatProcessor
 
 lang = 'en'
+user_agent = 'MyCoolApp/0.0 (MyWebSite; MyEmail) WikiNLP/0.1'
 
-catprocessor = CatProcessor(lang)
+catprocessor = CatProcessor(lang, user_agent)
 catprocessor.get_categories()
 ```
 
@@ -90,8 +93,9 @@ You will find a category list saved in *data/en/wiki_categories.txt*. By default
 from wikinlp.categories import CatProcessor
 
 lang = 'en'
+user_agent = 'MyCoolApp/0.0 (MyWebSite; MyEmail) WikiNLP/0.1'
 
-catprocessor = CatProcessor(lang)
+catprocessor = CatProcessor(lang, user_agent)
 catprocessor.get_categories(mincount=5, maxcount=100)
 ```
 
@@ -128,7 +132,9 @@ Finally, it is also possible to get the external links for particular categories
 from wikinlp.categories import CatProcessor
 
 lang = 'simple'
-catprocessor = CatProcessor(lang)
+user_agent = 'MyCoolApp/0.0 (MyWebSite; MyEmail) WikiNLP/0.1'
+
+catprocessor = CatProcessor(lang, user_agent)
 catprocessor.get_page_extlinks(['1908 books'])
 ```
 

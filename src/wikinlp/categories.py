@@ -1,22 +1,23 @@
 #!/usr/bin/python3
 
-import requests
 import re
+import requests
 from time import sleep
 import inspect, os
 from os.path import join, exists
 import pickle
-import requests
 from pathlib import Path
 from nltk.tokenize import word_tokenize
 
+
 class CatProcessor:
 
-    def __init__(self,lang=None):
+    def __init__(self, lang=None, user_agent=None):
         self.lang = lang
         filename = inspect.getframeinfo(inspect.currentframe()).filename
         self.path = os.path.dirname(os.path.abspath(filename))
         self.URL = "https://"+self.lang+".wikipedia.org/w/api.php"
+        self.headers = {'User-Agent': user_agent}
 
     def get_categories(self, mincount=20, maxcount=500):
         processed_dir = join(os.getcwd(),join('data',self.lang))
@@ -38,7 +39,7 @@ class CatProcessor:
         f = open(cat_file_path,'w')
 
         while True: #loop until all categories are returned
-            R = S.get(url=self.URL, params=PARAMS)
+            R = S.get(url=self.URL, params=PARAMS, headers=self.headers)
             DATA = R.json()
 
             CATEGORIES = DATA["query"]["allcategories"]
@@ -78,7 +79,7 @@ class CatProcessor:
             }
 
             for i in range(5):
-                R = S.get(url=self.URL, params=PARAMS)
+                R = S.get(url=self.URL, params=PARAMS, headers=self.headers)
                 DATA = R.json()
 
                 PAGES = DATA["query"]["categorymembers"]
@@ -115,7 +116,7 @@ class CatProcessor:
             "ellimit": "max"
         }
 
-        R = S.get(url=self.URL, params=PARAMS)
+        R = S.get(url=self.URL, params=PARAMS, headers=self.headers)
         DATA = R.json()
 
         PAGES = DATA["query"]["pages"]
@@ -208,7 +209,7 @@ class CatProcessor:
                     "titles": titles[i]
                 }
 
-                R = S.get(url=self.URL, params=PARAMS)
+                R = S.get(url=self.URL, params=PARAMS, headers=self.headers)
                 DATA = R.json()
 
                 PAGES = DATA["query"]["pages"]
